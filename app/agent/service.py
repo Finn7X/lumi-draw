@@ -152,7 +152,16 @@ class ImageGenAgenticService:
             logger.info("[%s][%s] ===== Start image generation =====", self.service_name, thread_id)
             logger.info("[%s][%s] Query: %s", self.service_name, thread_id, query)
 
-            langfuse_handler = LangfuseCallbackHandler()
+            # Initialize Langfuse handler only if configured
+            callbacks = []
+            settings = get_settings()
+            if settings.langfuse_secret_key and settings.langfuse_public_key:
+                try:
+                    langfuse_handler = LangfuseCallbackHandler()
+                    callbacks.append(langfuse_handler)
+                    logger.info("[%s][%s] Langfuse tracing enabled", self.service_name, thread_id)
+                except Exception as e:
+                    logger.warning("[%s][%s] Langfuse init failed: %s", self.service_name, thread_id, e)
 
             agent = self._create_agent()
             messages = [HumanMessage(content=query)]
@@ -162,7 +171,7 @@ class ImageGenAgenticService:
 
             config = {
                 "configurable": {"thread_id": thread_id},
-                "callbacks": [langfuse_handler],
+                "callbacks": callbacks,
                 "metadata": {
                     "langfuse_user_id": user_id or "anonymous",
                     "langfuse_session_id": session_id,
