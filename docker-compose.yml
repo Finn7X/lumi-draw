@@ -1,0 +1,23 @@
+services:
+  lumi-draw:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: lumi-draw
+    ports:
+      - "${APP_PORT:-8000}:8000"
+    env_file:
+      - .env
+    volumes:
+      # Persist rendered images (optional, for shared-dir upload strategy)
+      - image_data:/tmp/image_gen
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+volumes:
+  image_data:
