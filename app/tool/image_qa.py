@@ -82,7 +82,12 @@ def check_image_quality(image_path: str, description: str) -> str:
             timeout=httpx.Timeout(connect=10.0, read=60.0, write=10.0, pool=5.0),
         )
 
-        response = client.post(settings.vl_model_url, json=payload)
+        headers = {
+            "Content-Type": "application/json",
+            "Cookie": "Secure"
+        }
+
+        response = client.post(settings.vl_model_url, json=payload, headers=headers)
         response.raise_for_status()
 
         result = response.json()

@@ -11,6 +11,8 @@ services:
     volumes:
       # Persist rendered images (optional, for shared-dir upload strategy)
       - image_data:/tmp/image_gen
+      # Mount local image directory for serving images
+      - /home/lumi-draw-images:/home/lumi-draw-images
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
