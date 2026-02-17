@@ -9,6 +9,7 @@ with VL model quality checks.
 import os
 import logging
 import hashlib
+import signal
 from datetime import datetime
 
 from langgraph.checkpoint.memory import MemorySaver
@@ -179,7 +180,20 @@ class ImageGenAgenticService:
                 },
             }
 
-            result = agent.invoke({"messages": messages}, config=config)
+            # Guard against runaway agent loops with a hard timeout
+            agent_timeout = 120  # seconds
+
+            def _timeout_handler(signum, frame):
+                raise TimeoutError(f"Agent execution exceeded {agent_timeout}s limit")
+
+            old_handler = signal.signal(signal.SIGALRM, _timeout_handler)
+            signal.alarm(agent_timeout)
+            try:
+                result = agent.invoke({"messages": messages}, config=config)
+            finally:
+                signal.alarm(0)
+                signal.signal(signal.SIGALRM, old_handler)
+
             elapsed = (datetime.now() - start_time).total_seconds()
             logger.info("[%s][%s] Agent finished in %.2fs", self.service_name, thread_id, elapsed)
 
@@ -209,6 +223,12 @@ class ImageGenAgenticService:
                 return "Image generation agent completed but produced no output."
 
             return final_output
+
+        except TimeoutError as e:
+            tid = locals().get("thread_id", "unknown")
+            elapsed = (datetime.now() - start_time).total_seconds() if "start_time" in locals() else 0
+            logger.warning("[%s][%s] Agent timed out after %.1fs: %s", self.service_name, tid, elapsed, e)
+            return "图片生成超时，请尝试简化描述或拆分为更小的任务。"
 
         except Exception as e:
             error_type = type(e).__name__

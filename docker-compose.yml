@@ -5,7 +5,7 @@ services:
       dockerfile: Dockerfile
     container_name: lumi-draw
     ports:
-      - "${APP_PORT:-8000}:8000"
+      - "${APP_PORT:-7700}:8000"
     env_file:
       - .env
     volumes:
@@ -20,6 +20,19 @@ services:
       timeout: 10s
       retries: 3
       start_period: 30s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: lumi-draw-frontend
+    ports:
+      - "7800:80"
+    volumes:
+      - /home/lumi-draw-images:/home/lumi-draw-images:ro
+    depends_on:
+      - lumi-draw
+    restart: unless-stopped
 
 volumes:
   image_data:

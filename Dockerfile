@@ -16,6 +16,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libgtk-3-0 libgdk-pixbuf-2.0-0 \
     # Chinese fonts
     fonts-wqy-zenhei fonts-wqy-microhei \
+    # curl for healthcheck
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # ---- Python dependencies ----
