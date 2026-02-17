@@ -5,7 +5,7 @@ services:
       dockerfile: Dockerfile
     container_name: lumi-draw
     ports:
-      - "${APP_PORT:-7700}:8000"
+      - "127.0.0.1:${APP_PORT:-7700}:8000"
     env_file:
       - .env
     volumes:
@@ -27,7 +27,7 @@ services:
       dockerfile: Dockerfile
     container_name: lumi-draw-frontend
     ports:
-      - "7800:80"
+      - "127.0.0.1:7800:80"
     volumes:
       - /home/lumi-draw-images:/home/lumi-draw-images:ro
     depends_on:
