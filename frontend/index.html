@@ -21,9 +21,25 @@
     padding: 14px 20px;
     font-size: 18px;
     font-weight: 600;
-    text-align: center;
     flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
   }
+
+  #new-chat-btn {
+    font-size: 13px;
+    font-weight: 500;
+    padding: 6px 14px;
+    background: rgba(255,255,255,0.12);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 6px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s;
+  }
+  #new-chat-btn:hover { background: rgba(255,255,255,0.22); }
 
   #chat {
     flex: 1;
@@ -146,7 +162,10 @@
 </head>
 <body>
 
-<header>Lumi Draw</header>
+<header>
+  <span>Lumi Draw</span>
+  <button id="new-chat-btn" title="清空当前对话，开始全新会话">＋ 新对话</button>
+</header>
 
 <div id="chat"></div>
 
@@ -159,8 +178,72 @@
 const chat = document.getElementById('chat');
 const msgInput = document.getElementById('msg');
 const sendBtn = document.getElementById('send');
+const newChatBtn = document.getElementById('new-chat-btn');
 
+// ---------------------------------------------------------------------------
+// Session state
+// ---------------------------------------------------------------------------
+
+let activeConversationId = localStorage.getItem('activeConversationId') || null;
+
+// ---------------------------------------------------------------------------
+// New conversation button
+// ---------------------------------------------------------------------------
+
+newChatBtn.addEventListener('click', () => {
+  activeConversationId = null;
+  localStorage.removeItem('activeConversationId');
+  chat.innerHTML = '';
+  msgInput.focus();
+});
+
+// ---------------------------------------------------------------------------
+// Lazy conversation creation — called before the first send
+// ---------------------------------------------------------------------------
+
+async function ensureConversation() {
+  if (activeConversationId) return;
+  const resp = await fetch('/api/v1/conversations', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({}),
+  });
+  if (!resp.ok) throw new Error('Failed to create conversation: ' + resp.status);
+  const data = await resp.json();
+  activeConversationId = data.conversation_id;
+  localStorage.setItem('activeConversationId', activeConversationId);
+}
+
+// ---------------------------------------------------------------------------
+// Page load: restore history from server if a previous session was saved
+// ---------------------------------------------------------------------------
+
+async function restoreHistory() {
+  if (!activeConversationId) return;
+  try {
+    const resp = await fetch(`/api/v1/conversations/${activeConversationId}/messages`);
+    if (resp.status === 404) {
+      // Session expired on the server; start fresh silently
+      activeConversationId = null;
+      localStorage.removeItem('activeConversationId');
+      return;
+    }
+    if (!resp.ok) return;
+    const data = await resp.json();
+    for (const m of data.messages) {
+      addMessage(m.content, m.role === 'user' ? 'user' : 'bot');
+    }
+  } catch (e) {
+    console.warn('History restore failed:', e);
+  }
+}
+
+restoreHistory();
+
+// ---------------------------------------------------------------------------
 // Auto-resize textarea
+// ---------------------------------------------------------------------------
+
 msgInput.addEventListener('input', () => {
   msgInput.style.height = 'auto';
   msgInput.style.height = Math.min(msgInput.scrollHeight, 120) + 'px';
@@ -175,6 +258,10 @@ msgInput.addEventListener('keydown', (e) => {
 });
 
 sendBtn.addEventListener('click', doSend);
+
+// ---------------------------------------------------------------------------
+// UI helpers
+// ---------------------------------------------------------------------------
 
 function addMessage(text, cls) {
   const div = document.createElement('div');
@@ -222,10 +309,8 @@ function rewriteImageUrl(url) {
 }
 
 function renderMarkdown(text) {
-  // Rewrite image URLs before any processing
   text = rewriteImageUrl(text);
 
-  // Escape HTML first
   let html = text
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -249,6 +334,10 @@ function renderMarkdown(text) {
   return html;
 }
 
+// ---------------------------------------------------------------------------
+// Send
+// ---------------------------------------------------------------------------
+
 async function doSend() {
   const text = msgInput.value.trim();
   if (!text) return;
@@ -260,10 +349,12 @@ async function doSend() {
   showLoading();
 
   try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 300000); // 5 min
+    await ensureConversation();
 
-    const resp = await fetch('/api/v1/generate', {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 300000); // 5 min client-side guard
+
+    const resp = await fetch(`/api/v1/conversations/${activeConversationId}/messages`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ query: text }),
@@ -273,18 +364,24 @@ async function doSend() {
     hideLoading();
 
     if (!resp.ok) {
-      if (resp.status === 504) {
-        addMessage('请求超时 (504)：图片生成耗时过长，请稍后重试或简化描述。', 'error');
+      const contentType = resp.headers.get('content-type') || '';
+      let detail = '';
+      if (contentType.includes('application/json')) {
+        const errData = await resp.json();
+        detail = errData.detail || JSON.stringify(errData);
+      }
+
+      if (resp.status === 404) {
+        // Session expired; clear local ID so next send starts a new session
+        activeConversationId = null;
+        localStorage.removeItem('activeConversationId');
+        addMessage('会话已过期，请重新发送消息以开始新对话。', 'error');
+      } else if (resp.status === 409) {
+        addMessage('上一条消息仍在处理中，请稍候再试。', 'error');
+      } else if (resp.status === 504) {
+        addMessage('请求超时：图片生成耗时过长，请尝试简化描述或拆分任务。', 'error');
       } else {
-        const contentType = resp.headers.get('content-type') || '';
-        let errMsg = resp.status + '';
-        if (contentType.includes('application/json')) {
-          const errData = await resp.json();
-          errMsg += ': ' + (errData.detail || JSON.stringify(errData));
-        } else {
-          errMsg += ': 服务端错误';
-        }
-        addMessage('请求失败: ' + errMsg, 'error');
+        addMessage('请求失败 ' + resp.status + (detail ? ': ' + detail : ''), 'error');
       }
     } else {
       const data = await resp.json();

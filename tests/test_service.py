@@ -5,6 +5,7 @@ Usage:
     pytest tests/test_service.py -v
 """
 
+import uuid
 import logging
 
 from app.agent.service import ImageGenAgenticService
@@ -40,11 +41,21 @@ def test_single_query():
     service = ImageGenAgenticService(service_name="test_image_gen")
     result = service.generate_image(
         query=TEST_QUESTIONS[0],
+        conversation_id=str(uuid.uuid4()),
         user_id="test_user_1",
     )
     assert isinstance(result, str)
     assert len(result) > 0
     logger.info("Result (first 500 chars): %s", result[:500])
+
+
+def test_extract_image_url():
+    """Unit test: extract image URL from agent markdown output."""
+    text = "已为您生成图片：\n登录流程图\n![流程图](http://example.com/abc.png)"
+    url = ImageGenAgenticService.extract_image_url(text)
+    assert url == "http://example.com/abc.png"
+
+    assert ImageGenAgenticService.extract_image_url("no image here") is None
 
 
 if __name__ == "__main__":
@@ -57,7 +68,11 @@ if __name__ == "__main__":
     success, fail = 0, 0
     for i, q in enumerate(TEST_QUESTIONS):
         try:
-            r = service.generate_image(query=q, user_id=f"test_user_{i + 1}")
+            r = service.generate_image(
+                query=q,
+                conversation_id=str(uuid.uuid4()),
+                user_id=f"test_user_{i + 1}",
+            )
             logger.info("[%d/%d] OK: %s", i + 1, len(TEST_QUESTIONS), r[:200])
             success += 1
         except Exception as exc:
