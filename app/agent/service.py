@@ -25,11 +25,13 @@ from langchain.agents.middleware import (
 )
 from langchain.agents import create_agent
 from deepagents.middleware.patch_tool_calls import PatchToolCallsMiddleware
+from deepagents.middleware.filesystem import FilesystemMiddleware
+from deepagents.backends.state import StateBackend
 from langchain.messages import HumanMessage
 
 from ..config import get_settings
 from ..model import get_main_model, get_fallback_models
-from ..tool import generate_html_image, check_image_quality
+from ..tool import generate_html_image, generate_html_image_from_vfs, check_image_quality
 from .prompt import get_system_prompt
 
 logger = logging.getLogger(__name__)
@@ -47,6 +49,16 @@ from langfuse.langchain import CallbackHandler as LangfuseCallbackHandler
 
 # Regex to extract the first markdown image URL from agent output
 _IMAGE_URL_RE = re.compile(r'!\[[^\]]*\]\(([^)]+)\)')
+
+_VFS_SYSTEM_PROMPT = """## 虚拟文件系统工具（可选）
+你可以使用虚拟文件系统工具（ls/read_file/write_file/edit_file/glob/grep）在会话内保存和修改文件。
+
+稳定性优先建议：
+1) 如果是单轮简单任务，优先直接使用 generate_html_image。
+2) 如果是多轮修改且 HTML 很长，先 write_file 或 edit_file 维护 HTML 文件，再使用 generate_html_image_from_vfs(file_path=...) 渲染。
+3) 路径必须使用绝对路径（例如 /workspace/design.html）。
+4) 生成图片后，仍必须调用 check_image_quality。
+"""
 
 
 class ImageGenAgenticService:
@@ -68,6 +80,7 @@ class ImageGenAgenticService:
 
     def _create_agent(self):
         """Create and return a configured LangGraph agent using the shared MemorySaver."""
+        settings = get_settings()
         model = get_main_model()
         fallback_models = get_fallback_models()
 
@@ -77,7 +90,11 @@ class ImageGenAgenticService:
         )
 
         tools = [generate_html_image, check_image_quality]
-        if get_settings().agent_enable_mermaid:
+        if settings.agent_enable_virtual_filesystem:
+            # Keep the original toolchain and add VFS file-based render path.
+            tools.insert(1, generate_html_image_from_vfs)
+
+        if settings.agent_enable_mermaid:
             try:
                 from ..tool import generate_mermaid_image
                 tools.insert(1, generate_mermaid_image)
@@ -108,11 +125,22 @@ class ImageGenAgenticService:
             summary_prefix="[History summary] ",
         )
 
-        middleware = [
-            PatchToolCallsMiddleware(),
-            context_editing,
-            summarization,
-        ]
+        middleware = [PatchToolCallsMiddleware()]
+        if settings.agent_enable_virtual_filesystem:
+            filesystem_middleware = FilesystemMiddleware(
+                backend=StateBackend,
+                system_prompt=_VFS_SYSTEM_PROMPT,
+                tool_token_limit_before_evict=20000,
+            )
+            # Keep only VFS text/file tools; do not expose execute.
+            filesystem_middleware.tools = [
+                t for t in filesystem_middleware.tools
+                if getattr(t, "name", "") in {"ls", "read_file", "write_file", "edit_file", "glob", "grep"}
+            ]
+            middleware.append(filesystem_middleware)
+            logger.info("[%s] Virtual filesystem middleware enabled", self.service_name)
+
+        middleware.extend([context_editing, summarization])
         if fallback_models:
             middleware.append(ModelFallbackMiddleware(*fallback_models))
 

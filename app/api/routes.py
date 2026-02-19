@@ -11,7 +11,7 @@ as LangGraph's thread_id inside the agent service.
 
 Concurrency:
 - Blocking agent call is offloaded to a thread pool via run_in_threadpool.
-- asyncio.wait_for enforces a per-request timeout (150 s).
+- asyncio.wait_for enforces a per-request timeout (600 s).
 - Per-conversation asyncio.Lock prevents concurrent turns on the same session.
 """
 
@@ -49,7 +49,7 @@ _store: InMemoryConversationStore | None = None
 # Per-conversation asyncio locks — must be created and held in async context.
 _conversation_locks: dict[str, asyncio.Lock] = {}
 
-AGENT_TIMEOUT = 150.0  # seconds; routes enforce this via asyncio.wait_for
+AGENT_TIMEOUT = 600.0  # seconds; routes enforce this via asyncio.wait_for
 
 
 def get_service() -> ImageGenAgenticService:

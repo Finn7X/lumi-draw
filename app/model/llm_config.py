@@ -17,7 +17,7 @@ def _build_http_client() -> httpx.Client:
         verify=False,
         http2=False,
         trust_env=False,
-        timeout=httpx.Timeout(connect=10.0, read=120.0, write=30.0, pool=10.0),
+        timeout=httpx.Timeout(connect=10.0, read=600.0, write=600.0, pool=10.0),
     )
 
 

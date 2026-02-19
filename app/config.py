@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     llm_primary_api_key: str = ""
     llm_primary_max_tokens: Optional[int] = None  # None = no limit (API default)
     llm_primary_temperature: float = 1.0
-    llm_primary_timeout: int = 60
+    llm_primary_timeout: int = 600
     llm_primary_max_retries: int = 1
     llm_primary_thinking_enabled: bool = True
 
@@ -61,6 +61,9 @@ class Settings(BaseSettings):
     # Requires service restart to take effect (Settings is cached via @lru_cache).
     # Note: Mermaid code has been removed; rollback requires git revert.
     agent_enable_mermaid: bool = False
+    # Enable virtual filesystem tools (ls/read/write/edit/glob/grep) for the agent.
+    # Uses in-memory per-thread state backend by default.
+    agent_enable_virtual_filesystem: bool = True
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8", "extra": "ignore"}
 
