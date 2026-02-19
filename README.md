@@ -23,7 +23,6 @@ DALL-E, Midjourney, and Stable Diffusion excel at artistic imagery, but struggle
 | Data Charts | Cannot produce real data visualizations | ECharts renders actual data |
 | Iterative Editing | Must regenerate from scratch each time | Multi-turn incremental editing |
 | Reproducibility | Same prompt yields different results | Same code renders identically every time |
-| Deployment Cost | Requires GPU + model serving infra | Just an LLM API + headless browser |
 
 **Core insight**: Dashboards, flowcharts, social media cards, infographics, and layout templates are fundamentally **code**, not pixels. Having an LLM write code and rendering it in a browser is the more natural and controllable path.
 
@@ -98,8 +97,6 @@ User Input (natural language)
 - **VL Quality Feedback Loop**: After rendering, a vision-language model (Qwen3-VL) scores the output across 4 dimensions: completeness, readability, visual quality, and accuracy. Below threshold? The agent self-corrects and retries (up to 2 times).
 
 - **Virtual Filesystem (VFS)**: In-memory filesystem with `write_file` / `edit_file` / `read_file` operations. Code state persists across conversation turns, enabling true incremental editing.
-
-- **Smart Middleware Stack**: Auto-compresses context (cleans old tool outputs at 50k tokens), summarizes history (at 90k tokens), model auto-fallback, and Kimi thinking-mode compatibility patches. Keeps long conversations stable.
 
 ---
 
@@ -200,8 +197,6 @@ See [.env.example](.env.example) for the full list.
 | Data Visualization | ✅ Real ECharts data | ❌ Not supported | ❌ Manual |
 | Multi-turn Editing | ✅ Incremental | ❌ Full regeneration | ❌ |
 | Auto Quality Check | ✅ VL feedback loop | ❌ | ❌ |
-| GPU Required | ❌ None | ✅ Yes | ❌ |
-| Observability | ✅ Langfuse tracing | ❌ | ❌ |
 
 ---
 
