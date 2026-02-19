@@ -352,7 +352,7 @@ async function doSend() {
     await ensureConversation();
 
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 300000); // 5 min client-side guard
+    const timeout = setTimeout(() => controller.abort(), 600000); // 10 min client-side guard
 
     const resp = await fetch(`/api/v1/conversations/${activeConversationId}/messages`, {
       method: 'POST',
