@@ -2,6 +2,7 @@
 HTML rendering agent tool.
 
 Renders HTML code to a PNG image and uploads it, returning an accessible URL.
+Supports both pure CSS and enhanced_web (ECharts) rendering modes.
 """
 
 import json
@@ -19,8 +20,9 @@ logger = logging.getLogger(__name__)
 def generate_html_image(html_code: str, width: int = 1200) -> str:
     """将 HTML 代码渲染为图片。
 
-    适用于：表格、数据展示、复杂排版、仪表盘、卡片、信息图等。
-    要求：所有 CSS 内联或 <style> 标签，不依赖外部资源，中文使用 Microsoft YaHei 字体。
+    适用于：表格、数据展示、复杂排版、仪表盘、卡片、信息图、ECharts 图表等。
+    支持纯 CSS 页面和使用 ECharts 库的页面（自动检测渲染模式）。
+    中文使用 Microsoft YaHei 字体。
 
     参数:
         html_code: 完整的 HTML 代码（包含 <!DOCTYPE html> 或 <html> 标签）

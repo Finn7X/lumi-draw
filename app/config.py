@@ -56,6 +56,11 @@ class Settings(BaseSettings):
 
     # --- Renderer ---
     render_output_dir: str = "/tmp/image_gen"
+    render_html_mode: str = "enhanced_web"  # pure_css | enhanced_web
+    render_allowed_hosts: str = "cdn.jsdelivr.net,unpkg.com,cdnjs.cloudflare.com"
+    render_ready_timeout_ms: int = 12000
+    render_block_external_images: bool = True
+    render_use_local_echarts: bool = False  # Use local ECharts bundle instead of CDN
 
     # --- Mermaid Migration ---
     # Feature flag for Mermaid tool. Defaults to False (HTML Native mode).
