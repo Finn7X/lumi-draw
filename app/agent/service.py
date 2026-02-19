@@ -2,7 +2,7 @@
 Image Generation Agentic Service
 
 Core service class that orchestrates the LLM agent to generate images
-from natural-language descriptions using HTML or Mermaid rendering,
+from natural-language descriptions using HTML Native rendering,
 with VL model quality checks.
 
 Multi-turn design:
@@ -29,7 +29,7 @@ from langchain.messages import HumanMessage
 
 from ..config import get_settings
 from ..model import get_main_model, get_fallback_models
-from ..tool import generate_html_image, generate_mermaid_image, check_image_quality
+from ..tool import generate_html_image, check_image_quality
 from .prompt import get_system_prompt
 
 logger = logging.getLogger(__name__)
@@ -51,9 +51,9 @@ _IMAGE_URL_RE = re.compile(r'!\[[^\]]*\]\(([^)]+)\)')
 
 class ImageGenAgenticService:
     """
-    Image Generation Agentic Service.
+    Image Generation Agentic Service (HTML Native).
 
-    - Receives a user description and autonomously selects HTML or Mermaid rendering.
+    - Receives a user description and generates images via HTML rendering.
     - Built-in VL model quality check.
     - Multi-model fallback mechanism.
     - Langfuse tracing (tag: ImageGen).
@@ -76,7 +76,14 @@ class ImageGenAgenticService:
             self.service_name, model.model_name, len(fallback_models),
         )
 
-        tools = [generate_html_image, generate_mermaid_image, check_image_quality]
+        tools = [generate_html_image, check_image_quality]
+        if get_settings().agent_enable_mermaid:
+            try:
+                from ..tool import generate_mermaid_image
+                tools.insert(1, generate_mermaid_image)
+                logger.info("[%s] Mermaid tool enabled (migration flag)", self.service_name)
+            except ImportError:
+                logger.warning("[%s] Mermaid flag enabled but module not found", self.service_name)
         system_prompt = get_system_prompt()
 
         # Parameters tuned for 128k context models.

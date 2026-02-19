@@ -2,7 +2,7 @@
 
 [English](README.md)
 
-基于 LLM 的 Agentic 图片生成服务。接收自然语言描述，自主选择 **HTML** 或 **Mermaid** 方式渲染图片，内置 VL（视觉语言）模型质量检查。
+基于 LLM 的 Agentic 图片生成服务。接收自然语言描述，通过 **HTML Native** 方式渲染图片，内置 VL（视觉语言）模型质量检查。
 
 ## 架构
 
@@ -20,7 +20,6 @@
 │                                  │
 │   工具:                           │
 │   ├── generate_html_image        │
-│   ├── generate_mermaid_image     │
 │   └── check_image_quality (VL)   │
 │                                  │
 │   中间件:                         │
@@ -61,7 +60,6 @@ lumi-draw/
 │   │   └── llm_config.py # LLM 模型配置
 │   ├── tool/
 │   │   ├── html_render.py      # HTML 渲染工具
-│   │   ├── mermaid_render.py   # Mermaid 渲染工具
 │   │   └── image_qa.py        # VL 质量检查工具
 │   └── util/
 │       ├── renderer.py   # Playwright 渲染引擎

@@ -27,7 +27,7 @@ def check_image_quality(image_path: str, description: str) -> str:
     必须在返回图片 URL 给用户之前调用此工具。
 
     参数:
-        image_path: 图片的本地文件路径（由 generate_html_image 或 generate_mermaid_image 返回的 local_path）
+        image_path: 图片的本地文件路径（由 generate_html_image 返回的 local_path）
         description: 用户的原始图片描述/需求
 
     返回:

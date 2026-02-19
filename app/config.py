@@ -56,9 +56,15 @@ class Settings(BaseSettings):
 
     # --- Renderer ---
     render_output_dir: str = "/tmp/image_gen"
-    mermaid_cdn_url: str = "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"
 
-    model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
+    # --- Mermaid Migration ---
+    # Feature flag for Mermaid tool. Defaults to False (HTML Native mode).
+    # Set to True only during migration window if rollback is needed.
+    # Requires service restart to take effect (Settings is cached via @lru_cache).
+    # Note: Mermaid code has been removed; rollback requires git revert.
+    agent_enable_mermaid: bool = False
+
+    model_config = {"env_file": ".env", "env_file_encoding": "utf-8", "extra": "ignore"}
 
 
 @lru_cache()

@@ -2,7 +2,7 @@
 
 [中文文档](README_CN.md)
 
-LLM-powered agentic image generation service. Accepts natural-language descriptions and autonomously produces images via **HTML** or **Mermaid** rendering, with built-in VL (Vision-Language) model quality assurance.
+LLM-powered agentic image generation service. Accepts natural-language descriptions and autonomously produces images via **HTML Native** rendering, with built-in VL (Vision-Language) model quality assurance.
 
 ## Architecture
 
@@ -20,7 +20,6 @@ User Request
 │                                  │
 │   Tools:                         │
 │   ├── generate_html_image        │
-│   ├── generate_mermaid_image     │
 │   └── check_image_quality (VL)   │
 │                                  │
 │   Middleware:                     │
@@ -60,8 +59,7 @@ lumi-draw/
 │   ├── model/
 │   │   └── llm_config.py # LLM configuration
 │   ├── tool/
-│   │   ├── html_render.py
-│   │   ├── mermaid_render.py
+│   │   │   ├── html_render.py
 │   │   └── image_qa.py   # VL quality check
 │   └── util/
 │       ├── renderer.py   # Playwright rendering engine

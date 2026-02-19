@@ -32,7 +32,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Lumi Draw",
     description="LLM-powered agentic image generation service. "
-                "Supports HTML and Mermaid rendering with VL quality checks.",
+                "Generates images via HTML Native rendering with VL quality checks.",
     version="1.0.0",
     lifespan=lifespan,
 )
