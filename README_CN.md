@@ -148,6 +148,7 @@ Content-Type: application/json
 | `APP_PORT` | 服务端口 | `8000` |
 | `LOG_LEVEL` | 日志级别 | `info` |
 | `LLM_PRIMARY_*` | 主模型配置 | minimax-m21 |
+| `LLM_PRIMARY_THINKING_ENABLED` | Kimi K2.5 思考模式开关 | `true` |
 | `LLM_FALLBACK_*` | 备用模型配置 | kimi-k2 |
 | `VL_MODEL_URL` | VL 质量检查模型地址 | — |
 | `LANGFUSE_*` | Langfuse 可观测性 | — |

@@ -5,11 +5,11 @@ pydantic>=2.0
 pydantic-settings>=2.0
 
 # === LLM / Agent Framework ===
-langchain>=0.3.0
-langchain-core>=0.3.0
-langchain-openai>=0.3.0
-langgraph>=0.2.0
-deepagents>=0.1.0
+langchain>=1.2.10
+langchain-core>=1.2.14
+langchain-openai>=1.1.10
+langgraph>=1.0.8
+deepagents>=0.4.1
 
 # === Observability ===
 langfuse>=2.0.0

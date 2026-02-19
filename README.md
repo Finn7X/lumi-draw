@@ -148,6 +148,7 @@ All settings are managed via environment variables (see [`.env.example`](.env.ex
 | `APP_PORT` | Listen port | `8000` |
 | `LOG_LEVEL` | Logging level | `info` |
 | `LLM_PRIMARY_*` | Primary LLM settings | minimax-m21 |
+| `LLM_PRIMARY_THINKING_ENABLED` | Kimi K2.5 thinking mode switch | `true` |
 | `LLM_FALLBACK_*` | Fallback LLM settings | kimi-k2 |
 | `VL_MODEL_URL` | VL quality-check model endpoint | — |
 | `LANGFUSE_*` | Langfuse observability | — |

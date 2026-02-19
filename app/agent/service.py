@@ -108,14 +108,13 @@ class ImageGenAgenticService:
             summary_prefix="[History summary] ",
         )
 
-        fallback = ModelFallbackMiddleware(*fallback_models)
-
         middleware = [
             PatchToolCallsMiddleware(),
             context_editing,
             summarization,
-            fallback,
         ]
+        if fallback_models:
+            middleware.append(ModelFallbackMiddleware(*fallback_models))
 
         agent = create_agent(
             model=model,

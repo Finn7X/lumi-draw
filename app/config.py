@@ -7,9 +7,9 @@ with sensible defaults for development.
 
 import os
 from functools import lru_cache
+from typing import Optional
 
 from pydantic_settings import BaseSettings
-from pydantic import Field
 
 
 class Settings(BaseSettings):
@@ -21,21 +21,14 @@ class Settings(BaseSettings):
     log_level: str = "info"
 
     # --- Primary LLM ---
-    llm_primary_model: str = "minimax-m21"
-    llm_primary_base_url: str = "http://10.220.77.197:9506/v1"
-    llm_primary_api_key: str = "EMPTY"
-    llm_primary_temperature: float = 0.2
+    llm_primary_model: str = "kimi-k2.5"
+    llm_primary_base_url: str = "https://api.moonshot.cn/v1"
+    llm_primary_api_key: str = ""
+    llm_primary_max_tokens: Optional[int] = None  # None = no limit (API default)
+    llm_primary_temperature: float = 1.0
     llm_primary_timeout: int = 60
     llm_primary_max_retries: int = 1
-
-    # --- Fallback LLM ---
-    llm_fallback_model: str = "Kimi-K2-Instruct"
-    llm_fallback_base_url: str = "https://maas-apigateway.dt.zte.com.cn/model/kimi-k2/v1"
-    llm_fallback_api_key: str = ""
-    llm_fallback_max_tokens: int = 32000
-    llm_fallback_temperature: float = 0.2
-    llm_fallback_timeout: int = 60
-    llm_fallback_max_retries: int = 1
+    llm_primary_thinking_enabled: bool = True
 
     # --- VL Quality Check Model ---
     vl_model_url: str = "http://10.220.77.197:9503/v1/chat/completions"
